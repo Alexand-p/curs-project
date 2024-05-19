@@ -118,5 +118,13 @@
         "takenByUser": "",
         "title": "1",
         "yearPublished": 2000
+    },
+    {
+        "author": "2",
+        "available": true,
+        "genre": "3",
+        "takenByUser": "",
+        "title": "1",
+        "yearPublished": 2000
     }
 ]

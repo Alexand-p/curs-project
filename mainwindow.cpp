@@ -467,7 +467,28 @@ void MainWindow::returnBook(int userRow, int bookRow)
 
 void MainWindow::generateReport()
 {
-    QMessageBox::information(this, "Отчет", "Отчет пока не реализован!");
+    QFile file("report.txt");
+    if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QTextStream out(&file);
+        out << "Отчет о библиотеке\n";
+        out << "==================\n\n";
+        out << "Книги:\n";
+        for (int i = 0; i < bookModel->rowCount(); ++i) {
+            out << "Название: " << bookModel->item(i, 0)->text() << "\n";
+            out << "Автор: " << bookModel->item(i, 1)->text() << "\n";
+            out << "Жанр: " << bookModel->item(i, 2)->text() << "\n";
+            out << "Год издания: " << bookModel->item(i, 3)->text() << "\n";
+            out << "Статус: " << bookModel->item(i, 4)->text() << "\n\n";
+        }
+        out << "Пользователи:\n";
+        for (int i = 0; i < userModel->rowCount(); ++i) {
+            out << "Имя пользователя: " << userModel->item(i, 0)->text() << "\n";
+            out << "Тип пользователя: " << userModel->item(i, 2)->text() << "\n";
+            out << "Выданная книга: " << userModel->item(i, 2)->text() << "\n\n";
+        }
+        file.close();
+        QMessageBox::information(this, "Отчет", "Отчет успешно сгенерирован.");
+    }
 }
 
 void MainWindow::onLoginSuccess(const QString& username, const QString& userType)
