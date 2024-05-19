@@ -32,7 +32,7 @@ private slots:
     void on_returnBookButton_clicked();
     void on_generateReportButton_clicked();
     void on_loginButton_clicked(); // Добавлен слот для кнопки входа
-    void onLoginSuccess(const QString& username); // Добавлен слот для сигнала
+    void onLoginSuccess(const QString& username, const QString& userType); // Обновлен слот для сигнала
 
 private:
     Ui::MainWindow *ui;
@@ -43,6 +43,8 @@ private:
     QLineEdit *passwordLineEdit;
     QPushButton *loginButton;
     QLabel *loginStatusLabel; // Добавлен QLabel для статуса входа
+
+    int loggedInUserIndex; // Добавлен флаг для отслеживания текущего пользователя
 
     void loadBooks();
     void loadUsers();
@@ -60,7 +62,7 @@ private:
     void returnBook(int userRow, int bookRow);
     void generateReport();
 
-    bool validateLogin(const QString& username, const QString& password);
+    bool validateLogin(const QString& username, const QString& password, QString& userType); // Обновлен метод
     void setElementsEnabled(bool enabled);
 };
 

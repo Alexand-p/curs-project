@@ -1,6 +1,14 @@
 [
     {
         "author": "Джордж Оруэлл",
+        "available": false,
+        "genre": "Антиутопия",
+        "takenByUser": "2",
+        "title": "1985",
+        "yearPublished": 1949
+    },
+    {
+        "author": "Джордж Оруэлл",
         "available": true,
         "genre": "Антиутопия",
         "takenByUser": "",
@@ -8,11 +16,107 @@
         "yearPublished": 1949
     },
     {
-        "author": "Лев Толстой",
+        "author": "Джордж Оруэлл",
         "available": true,
-        "genre": "Роман",
+        "genre": "Антиутопия",
         "takenByUser": "",
+        "title": "1984",
+        "yearPublished": 1949
+    },
+    {
+        "author": "Джордж Оруэлл",
+        "available": false,
+        "genre": "Антиутопия",
+        "takenByUser": "2",
+        "title": "1984",
+        "yearPublished": 1949
+    },
+    {
+        "author": "Джордж Оруэлл",
+        "available": false,
+        "genre": "Антиутопия",
+        "takenByUser": "2",
+        "title": "1984",
+        "yearPublished": 1949
+    },
+    {
+        "author": "Джордж Оруэлл",
+        "available": false,
+        "genre": "Антиутопия",
+        "takenByUser": "Алекс",
+        "title": "1984",
+        "yearPublished": 1949
+    },
+    {
+        "author": "Джордж Оруэлл",
+        "available": false,
+        "genre": "Антиутопия",
+        "takenByUser": "Алекс",
+        "title": "1984",
+        "yearPublished": 1949
+    },
+    {
+        "author": "Джордж Оруэлл",
+        "available": false,
+        "genre": "Антиутопия",
+        "takenByUser": "Алекс",
+        "title": "1984",
+        "yearPublished": 1949
+    },
+    {
+        "author": "Джордж Оруэлл",
+        "available": false,
+        "genre": "Антиутопия",
+        "takenByUser": "Алекс",
+        "title": "1984",
+        "yearPublished": 1949
+    },
+    {
+        "author": "Лев Толстой",
+        "available": false,
+        "genre": "Роман",
+        "takenByUser": "фывфыв",
         "title": "Война и мир",
         "yearPublished": 1869
+    },
+    {
+        "author": "Джордж Оружл",
+        "available": false,
+        "genre": "Хорор",
+        "takenByUser": "2",
+        "title": "1985",
+        "yearPublished": 2012
+    },
+    {
+        "author": "Джордж",
+        "available": true,
+        "genre": "1",
+        "takenByUser": "",
+        "title": "1999",
+        "yearPublished": 2003
+    },
+    {
+        "author": "1",
+        "available": true,
+        "genre": "1",
+        "takenByUser": "",
+        "title": "1",
+        "yearPublished": 2002
+    },
+    {
+        "author": "1",
+        "available": true,
+        "genre": "1",
+        "takenByUser": "",
+        "title": "1",
+        "yearPublished": 2000
+    },
+    {
+        "author": "1",
+        "available": true,
+        "genre": "1",
+        "takenByUser": "",
+        "title": "1",
+        "yearPublished": 2000
     }
 ]

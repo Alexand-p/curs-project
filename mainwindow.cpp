@@ -7,27 +7,27 @@
 #include <QMessageBox>
 #include <QJsonArray>
 #include <QGridLayout>
+#include <QStandardItemModel>
+#include <QStandardItem>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
+    , loggedInUserIndex(-1) // Инициализация флага
 {
     ui->setupUi(this);
     bookModel = new QStandardItemModel(this);
     userModel = new QStandardItemModel(this);
-    // Изменяем методы setModel для QTableView
     ui->bookTableView->setModel(bookModel);
     ui->userTableView->setModel(userModel);
 
-    // Создаем UI-элементы для входа
     usernameLineEdit = new QLineEdit;
     passwordLineEdit = new QLineEdit;
     passwordLineEdit->setEchoMode(QLineEdit::Password);
     loginButton = new QPushButton("Войти");
-    loginStatusLabel = new QLabel(""); // Надпись для статуса входа
-    loginStatusLabel->setStyleSheet("color: green;"); // Зеленый цвет для успешного входа
+    loginStatusLabel = new QLabel("");
+    loginStatusLabel->setStyleSheet("color: green;");
 
-    // Создаем QGridLayout для размещения UI-элементов
     QGridLayout *loginLayout = new QGridLayout;
     loginLayout->addWidget(new QLabel("Имя пользователя:"), 0, 0);
     loginLayout->addWidget(usernameLineEdit, 0, 1);
@@ -36,17 +36,16 @@ MainWindow::MainWindow(QWidget *parent)
     loginLayout->addWidget(loginButton, 2, 0, 1, 2);
     loginLayout->addWidget(loginStatusLabel, 3, 0, 1, 2);
 
-    // Добавляем layout в mainWindow
     QWidget *loginWidget = new QWidget;
     loginWidget->setLayout(loginLayout);
     ui->verticalLayout->addWidget(loginWidget);
 
-    // Устанавливаем начальное состояние элементов
-    setElementsEnabled(false); // Все элементы не активны
+    setElementsEnabled(false);
     loadBooks();
     loadUsers();
+    ui->userTableView->setVisible(false);
+    ui->bookTableView->setVisible(false);
 
-    // Подключаем сигнал к слоту
     connect(loginButton, &QPushButton::clicked, this, &MainWindow::on_loginButton_clicked);
 }
 
@@ -64,16 +63,15 @@ void MainWindow::on_addBookButton_clicked()
         if (ok && !author.isEmpty()) {
             QString genre = QInputDialog::getText(this, "Добавить книгу", "Жанр:", QLineEdit::Normal, "", &ok);
             if (ok && !genre.isEmpty()) {
-                bool isOk;
-                int yearPublished = QInputDialog::getInt(this, "Добавить книгу", "Год издания:", 1900, 2024, 1, isOk);
-                if (isOk) {
-                    // Проверяем, является ли пользователь администратором
+                int yearPublished = QInputDialog::getInt(this, "Добавить книгу", "Год издания:", 2000, 1900, 2024, 1, &ok);
+                if (ok) {
                     int userRow = ui->userTableView->currentIndex().row();
                     if (userRow >= 0) {
                         if (userModel->item(userRow, 2)->text() == "Администратор") {
+                            qDebug() << "Adding book: " << title << author << genre << yearPublished;
                             addBook(title, author, genre, yearPublished, true);
                             saveBooks();
-                            updateBookView();
+                            loadBooks();
                         } else {
                             QMessageBox::warning(this, "Ошибка доступа", "У вас недостаточно прав для добавления книг.");
                         }
@@ -100,12 +98,11 @@ void MainWindow::on_editBookButton_clicked()
             if (ok && !newAuthor.isEmpty()) {
                 QString newGenre = QInputDialog::getText(this, "Редактировать книгу", "Жанр:", QLineEdit::Normal, genre, &ok);
                 if (ok && !newGenre.isEmpty()) {
-                    bool isOk;
-                    int newYearPublished = QInputDialog::getInt(this, "Редактировать книгу", "Год издания:", 1900, 2024, 1, isOk);
-                    if (isOk) {
+                    int newYearPublished = QInputDialog::getInt(this, "Редактировать книгу", "Год издания:", yearPublished, 1900, 2024, 1, &ok);
+                    if (ok) {
                         editBook(row, newTitle, newAuthor, newGenre, newYearPublished, available);
                         saveBooks();
-                        updateBookView();
+                        loadBooks();
                     }
                 }
             }
@@ -120,7 +117,7 @@ void MainWindow::on_deleteBookButton_clicked()
         if (QMessageBox::question(this, "Удаление книги", "Вы уверены, что хотите удалить эту книгу?") == QMessageBox::Yes) {
             deleteBook(row);
             saveBooks();
-            updateBookView();
+            loadBooks();
         }
     }
 }
@@ -136,7 +133,7 @@ void MainWindow::on_addUserButton_clicked()
             if (ok) {
                 addUser(username, password, userType);
                 saveUsers();
-                updateUserView();
+                loadUsers();
             }
         }
     }
@@ -158,7 +155,7 @@ void MainWindow::on_editUserButton_clicked()
                 if (ok) {
                     editUser(row, newUsername, newPassword, newUserType);
                     saveUsers();
-                    updateUserView();
+                    loadUsers();
                 }
             }
         }
@@ -172,23 +169,36 @@ void MainWindow::on_deleteUserButton_clicked()
         if (QMessageBox::question(this, "Удаление пользователя", "Вы уверены, что хотите удалить этого пользователя?") == QMessageBox::Yes) {
             deleteUser(row);
             saveUsers();
-            updateUserView();
+            loadUsers();
         }
     }
 }
 
 void MainWindow::on_issueBookButton_clicked()
 {
-    int userRow = ui->userTableView->currentIndex().row();
-    if (userRow >= 0) {
+    if (loggedInUserIndex >= 0 && userModel->item(loggedInUserIndex, 2)->text() == "Пользователь") {
         int bookRow = ui->bookTableView->currentIndex().row();
         if (bookRow >= 0) {
             if (bookModel->item(bookRow, 4)->text() == "Доступна") {
-                issueBook(userRow, bookRow);
+                issueBook(loggedInUserIndex, bookRow);
                 saveBooks();
-                updateBookView();
+                loadBooks();
             } else {
-                QMessageBox::warning(this, "Ошибка", "Книга не доступна для выдачи.");
+                QMessageBox::warning(this, "Ошибка", "Книга не доступна для взятия.");
+            }
+        }
+    } else {
+        int userRow = ui->userTableView->currentIndex().row();
+        if (userRow >= 0) {
+            int bookRow = ui->bookTableView->currentIndex().row();
+            if (bookRow >= 0) {
+                if (bookModel->item(bookRow, 4)->text() == "Доступна") {
+                    issueBook(userRow, bookRow);
+                    saveBooks();
+                    loadBooks();
+                } else {
+                    QMessageBox::warning(this, "Ошибка", "Книга не доступна для выдачи.");
+                }
             }
         }
     }
@@ -196,16 +206,45 @@ void MainWindow::on_issueBookButton_clicked()
 
 void MainWindow::on_returnBookButton_clicked()
 {
-    int userRow = ui->userTableView->currentIndex().row();
-    if (userRow >= 0) {
-        int bookRow = ui->bookTableView->currentIndex().row();
-        if (bookRow >= 0) {
-            if (bookModel->item(bookRow, 4)->text() == "Взята") {
-                returnBook(userRow, bookRow);
-                saveBooks();
-                updateBookView();
-            } else {
-                QMessageBox::warning(this, "Ошибка", "Книга не взята пользователем.");
+    if (loggedInUserIndex >= 0 && userModel->item(loggedInUserIndex, 2)->text() == "Пользователь") {
+        QList<int> userBooks;
+        for (int i = 0; i < bookModel->rowCount(); ++i) {
+            if (bookModel->item(i, 5)->text() == userModel->item(loggedInUserIndex, 0)->text()) {
+                userBooks.append(i);
+            }
+        }
+        if (userBooks.isEmpty()) {
+            QMessageBox::information(this, "Возврат книги", "У вас нет книг для возврата.");
+            return;
+        }
+        bool ok;
+        QStringList bookTitles;
+        for (int i : userBooks) {
+            bookTitles.append(bookModel->item(i, 0)->text());
+        }
+        QString bookTitle = QInputDialog::getItem(this, "Возврат книги", "Выберите книгу для возврата:", bookTitles, 0, false, &ok);
+        if (ok && !bookTitle.isEmpty()) {
+            for (int i : userBooks) {
+                if (bookModel->item(i, 0)->text() == bookTitle) {
+                    returnBook(loggedInUserIndex, i);
+                    saveBooks();
+                    loadBooks();
+                    break;
+                }
+            }
+        }
+    } else {
+        int userRow = ui->userTableView->currentIndex().row();
+        if (userRow >= 0) {
+            int bookRow = ui->bookTableView->currentIndex().row();
+            if (bookRow >= 0) {
+                if (bookModel->item(bookRow, 4)->text() == "Взята") {
+                    returnBook(userRow, bookRow);
+                    saveBooks();
+                    loadBooks();
+                } else {
+                    QMessageBox::warning(this, "Ошибка", "Книга не взята пользователем.");
+                }
             }
         }
     }
@@ -219,135 +258,141 @@ void MainWindow::on_generateReportButton_clicked()
 void MainWindow::loadBooks()
 {
     QFile file("books.json");
-    if (file.open(QIODevice::ReadOnly)) {
-        QByteArray data = file.readAll();
-        QJsonDocument jsonDoc = QJsonDocument::fromJson(data);
-        if (jsonDoc.isArray()) {
-            QJsonArray jsonArray = jsonDoc.array();
-            bookModel->clear();
-            bookModel->setHorizontalHeaderLabels(QStringList() << "Название" << "Автор" << "Жанр" << "Год издания" << "Статус" << "Взял");
-            for (int i = 0; i < jsonArray.size(); i++) {
-                QJsonObject bookObject = jsonArray.at(i).toObject();
-                QString title = bookObject.value("title").toString();
-                QString author = bookObject.value("author").toString();
-                QString genre = bookObject.value("genre").toString();
-                int yearPublished = bookObject.value("yearPublished").toInt();
-                bool available = bookObject.value("available").toBool();
-                QString takenByUser = bookObject.value("takenByUser").toString();
-                QList<QStandardItem*> items;
-                items.append(new QStandardItem(title));
-                items.append(new QStandardItem(author));
-                items.append(new QStandardItem(genre));
-                items.append(new QStandardItem(QString::number(yearPublished)));
-                items.append(new QStandardItem(available ? "Доступна" : "Взята"));
-                items.append(new QStandardItem(takenByUser));
-                bookModel->appendRow(items);
-            }
-        }
-        file.close();
+    if (!file.open(QIODevice::ReadOnly)) {
+        qWarning("Could not open books.json for reading.");
+        return;
     }
+
+    QByteArray data = file.readAll();
+    QJsonDocument jsonDoc = QJsonDocument::fromJson(data);
+    if (!jsonDoc.isArray()) {
+        qWarning("Invalid JSON format in books.json.");
+        file.close();
+        return;
+    }
+
+    QJsonArray jsonArray = jsonDoc.array();
+    bookModel->clear();
+    bookModel->setHorizontalHeaderLabels(QStringList() << "Название" << "Автор" << "Жанр" << "Год издания" << "Статус" << "Взял");
+    for (int i = 0; i < jsonArray.size(); i++) {
+        QJsonObject bookObject = jsonArray.at(i).toObject();
+        QString title = bookObject.value("title").toString();
+        QString author = bookObject.value("author").toString();
+        QString genre = bookObject.value("genre").toString();
+        int yearPublished = bookObject.value("yearPublished").toInt();
+        bool available = bookObject.value("available").toBool();
+        QString takenByUser = bookObject.value("takenByUser").toString();
+        QList<QStandardItem*> items;
+        items.append(new QStandardItem(title));
+        items.append(new QStandardItem(author));
+        items.append(new QStandardItem(genre));
+        items.append(new QStandardItem(QString::number(yearPublished)));
+        items.append(new QStandardItem(available ? "Доступна" : "Взята"));
+        items.append(new QStandardItem(takenByUser));
+        bookModel->appendRow(items);
+    }
+
+    file.close();
+    qDebug() << "Books loaded from books.json, total:" << jsonArray.size();
 }
 
 void MainWindow::loadUsers()
 {
     QFile file("users.json");
-    if (file.open(QIODevice::ReadOnly)) {
-        QByteArray data = file.readAll();
-        QJsonDocument jsonDoc = QJsonDocument::fromJson(data);
-        if (jsonDoc.isArray()) {
-            QJsonArray jsonArray = jsonDoc.array();
-            userModel->clear();
-            userModel->setHorizontalHeaderLabels(QStringList() << "Имя пользователя" << "Пароль" << "Тип пользователя");
-            for (int i = 0; i < jsonArray.size(); i++) {
-                QJsonObject userObject = jsonArray.at(i).toObject();
-                QString username = userObject.value("username").toString();
-                QString password = userObject.value("password").toString();
-                QString userType = userObject.value("userType").toString();
-                QList<QStandardItem*> items;
-                items.append(new QStandardItem(username));
-                items.append(new QStandardItem(password));
-                items.append(new QStandardItem(userType));
-                userModel->appendRow(items);
-            }
-        }
-        file.close();
+    if (!file.open(QIODevice::ReadOnly)) {
+        qWarning("Could not open users.json for reading.");
+        return;
     }
+
+    QByteArray data = file.readAll();
+    QJsonDocument jsonDoc = QJsonDocument::fromJson(data);
+    if (!jsonDoc.isArray()) {
+        qWarning("Invalid JSON format in users.json.");
+        file.close();
+        return;
+    }
+
+    QJsonArray jsonArray = jsonDoc.array();
+    userModel->clear();
+    userModel->setHorizontalHeaderLabels(QStringList() << "Имя пользователя" << "Пароль" << "Тип пользователя");
+    for (int i = 0; i < jsonArray.size(); i++) {
+        QJsonObject userObject = jsonArray.at(i).toObject();
+        QString username = userObject.value("username").toString();
+        QString password = userObject.value("password").toString();
+        QString userType = userObject.value("userType").toString();
+        QList<QStandardItem*> items;
+        items.append(new QStandardItem(username));
+        items.append(new QStandardItem(password));
+        items.append(new QStandardItem(userType));
+        userModel->appendRow(items);
+    }
+
+    file.close();
+    qDebug() << "Users loaded from users.json, total:" << jsonArray.size();
 }
 
 void MainWindow::saveBooks()
 {
+    qDebug() << "Calling saveBooks...";
+
     QFile file("books.json");
-    if (file.open(QIODevice::WriteOnly)) {
-        QJsonArray jsonArray;
-        // Исправляем ошибку: берем количество строк из модели, а не из jsonArray
-        for (int i = 0; i < bookModel->rowCount(); i++) {
-            QJsonObject bookObject;
-            bookObject.insert("title", bookModel->item(i, 0)->text());
-            bookObject.insert("author", bookModel->item(i, 1)->text());
-            bookObject.insert("genre", bookModel->item(i, 2)->text());
-            bookObject.insert("yearPublished", bookModel->item(i, 3)->text().toInt());
-            bookObject.insert("available", bookModel->item(i, 4)->text() == "Доступна");
-            bookObject.insert("takenByUser", bookModel->item(i, 5)->text());
-            jsonArray.append(bookObject);
-        }
-        QJsonDocument jsonDoc(jsonArray);
-        file.write(jsonDoc.toJson());
-        file.close();
+    if (!file.open(QIODevice::WriteOnly)) {
+        qWarning("Could not open books.json for writing.");
+        return;
     }
+
+    QJsonArray jsonArray;
+    for (int i = 0; i < bookModel->rowCount(); i++) {
+        QJsonObject bookObject;
+        bookObject.insert("title", bookModel->item(i, 0)->text());
+        bookObject.insert("author", bookModel->item(i, 1)->text());
+        bookObject.insert("genre", bookModel->item(i, 2)->text());
+        bookObject.insert("yearPublished", bookModel->item(i, 3)->text().toInt());
+        bookObject.insert("available", bookModel->item(i, 4)->text() == "Доступна");
+        bookObject.insert("takenByUser", bookModel->item(i, 5)->text());
+        jsonArray.append(bookObject);
+    }
+
+    QJsonDocument jsonDoc(jsonArray);
+    file.write(jsonDoc.toJson());
+    file.close();
+
+    // Отладочная информация
+    qDebug() << "Saved books to books.json, total:" << bookModel->rowCount();
 }
 
 void MainWindow::saveUsers()
 {
     QFile file("users.json");
-    if (file.open(QIODevice::WriteOnly)) {
-        QJsonArray jsonArray;
-        // Исправляем ошибку: создаем jsonArray из userModel
-        for (int i = 0; i < userModel->rowCount(); i++) {
-            QJsonObject userObject;
-            userObject.insert("username", userModel->item(i, 0)->text());
-            userObject.insert("password", userModel->item(i, 1)->text());
-            userObject.insert("userType", userModel->item(i, 2)->text());
-            jsonArray.append(userObject);
-        }
-        QJsonDocument jsonDoc(jsonArray);
-        file.write(jsonDoc.toJson());
-        file.close();
+    if (!file.open(QIODevice::WriteOnly)) {
+        qWarning("Could not open users.json for writing.");
+        return;
     }
+
+    QJsonArray jsonArray;
+    for (int i = 0; i < userModel->rowCount(); i++) {
+        QJsonObject userObject;
+        userObject.insert("username", userModel->item(i, 0)->text());
+        userObject.insert("password", userModel->item(i, 1)->text());
+        userObject.insert("userType", userModel->item(i, 2)->text());
+        jsonArray.append(userObject);
+    }
+
+    QJsonDocument jsonDoc(jsonArray);
+    file.write(jsonDoc.toJson());
+    file.close();
+
+    qDebug() << "Saved users to users.json, total:" << userModel->rowCount();
 }
 
 void MainWindow::updateBookView()
 {
-    // Обновляем модель данных
-    bookModel->clear();
-    bookModel->setHorizontalHeaderLabels(QStringList() << "Название" << "Автор" << "Жанр" << "Год издания" << "Статус" << "Взял");
-    for (int i = 0; i < bookModel->rowCount(); i++) {
-        QList<QStandardItem*> items;
-        items.append(new QStandardItem(bookModel->item(i, 0)->text()));
-        items.append(new QStandardItem(bookModel->item(i, 1)->text()));
-        items.append(new QStandardItem(bookModel->item(i, 2)->text()));
-        items.append(new QStandardItem(QString::number(bookModel->item(i, 3)->text().toInt())));
-        items.append(new QStandardItem(bookModel->item(i, 4)->text() == "Доступна" ? "Доступна" : "Взята"));
-        items.append(new QStandardItem(bookModel->item(i, 5)->text()));
-        bookModel->appendRow(items);
-    }
-    // Обновляем представление
     ui->bookTableView->resizeColumnsToContents();
     ui->bookTableView->resizeRowsToContents();
 }
 
 void MainWindow::updateUserView()
 {
-    // Обновляем модель данных
-    userModel->clear();
-    userModel->setHorizontalHeaderLabels(QStringList() << "Имя пользователя" << "Пароль" << "Тип пользователя");
-    for (int i = 0; i < userModel->rowCount(); i++) {
-        QList<QStandardItem*> items;
-        items.append(new QStandardItem(userModel->item(i, 0)->text()));
-        items.append(new QStandardItem(userModel->item(i, 1)->text()));
-        items.append(new QStandardItem(userModel->item(i, 2)->text()));
-        userModel->appendRow(items);
-    }
-    // Обновляем представление
     ui->userTableView->resizeColumnsToContents();
     ui->userTableView->resizeRowsToContents();
 }
@@ -360,8 +405,13 @@ void MainWindow::addBook(const QString &title, const QString &author, const QStr
     items.append(new QStandardItem(genre));
     items.append(new QStandardItem(QString::number(yearPublished)));
     items.append(new QStandardItem(available ? "Доступна" : "Взята"));
-    items.append(new QStandardItem("")); // takenByUser по умолчанию пустое
+    items.append(new QStandardItem(""));
     bookModel->appendRow(items);
+
+    // Отладочная информация
+    qDebug() << "Added book: " << title << author << genre << yearPublished << available;
+
+    saveBooks();  // Сохранение данных сразу после добавления книги
 }
 
 void MainWindow::editBook(int row, const QString &title, const QString &author, const QString &genre, int yearPublished, bool available)
@@ -371,12 +421,12 @@ void MainWindow::editBook(int row, const QString &title, const QString &author, 
     bookModel->setItem(row, 2, new QStandardItem(genre));
     bookModel->setItem(row, 3, new QStandardItem(QString::number(yearPublished)));
     bookModel->setItem(row, 4, new QStandardItem(available ? "Доступна" : "Взята"));
-    // Не трогаем takenByUser, так как при редактировании книга не меняет владельца
 }
 
 void MainWindow::deleteBook(int row)
 {
     bookModel->removeRow(row);
+    saveBooks();  // Сохранение данных сразу после удаления книги
 }
 
 void MainWindow::addUser(const QString &username, const QString &password, const QString &userType)
@@ -402,38 +452,54 @@ void MainWindow::deleteUser(int row)
 
 void MainWindow::issueBook(int userRow, int bookRow)
 {
-    QString username = userModel->item(userRow, 0)->text(); // Получаем имя пользователя
+    QString username = userModel->item(userRow, 0)->text();
     bookModel->setItem(bookRow, 4, new QStandardItem("Взята"));
-    bookModel->setItem(bookRow, 5, new QStandardItem(username)); // Устанавливаем takenByUser
+    bookModel->setItem(bookRow, 5, new QStandardItem(username));
+    saveBooks();  // Сохранение данных после выдачи книги
 }
 
 void MainWindow::returnBook(int userRow, int bookRow)
 {
     bookModel->setItem(bookRow, 4, new QStandardItem("Доступна"));
-    bookModel->setItem(bookRow, 5, new QStandardItem("")); // Очищаем takenByUser
+    bookModel->setItem(bookRow, 5, new QStandardItem(""));
+    saveBooks();  // Сохранение данных после возврата книги
 }
 
 void MainWindow::generateReport()
 {
-    // Реализуйте генерацию отчета
     QMessageBox::information(this, "Отчет", "Отчет пока не реализован!");
 }
 
-// Слот для получения сигнала об успешном входе
-void MainWindow::onLoginSuccess(const QString& username)
+void MainWindow::onLoginSuccess(const QString& username, const QString& userType)
 {
-    // Загружаем данные из JSON-файлов (если нужно)
     loadBooks();
     loadUsers();
 
-    // Покажем основное окно (MainWindow)
-    show();
+    if (userType == "Пользователь") {
+        // Скрыть все ненужные кнопки и изменить кнопку на "Взять книгу"
+        ui->addBookButton->setVisible(false);
+        ui->editBookButton->setVisible(false);
+        ui->deleteBookButton->setVisible(false);
+        ui->addUserButton->setVisible(false);
+        ui->editUserButton->setVisible(false);
+        ui->deleteUserButton->setVisible(false);
+        ui->generateReportButton->setVisible(false);
+        ui->issueBookButton->setText("Взять книгу");
 
-    // Закрываем окно входа
-    // LoginWindow *loginWindow = qobject_cast<LoginWindow*>(sender());
-    // if (loginWindow) {
-    //     loginWindow->close();
-    // }
+        for (int i = 0; i < userModel->rowCount(); ++i) {
+            if (userModel->item(i, 0)->text() == username) {
+                loggedInUserIndex = i;
+                ui->userTableView->setRowHidden(i, false);
+            } else {
+                ui->userTableView->setRowHidden(i, true);
+            }
+        }
+    } else {
+        ui->userTableView->setVisible(true);
+    }
+
+    ui->bookTableView->setVisible(true);
+    show();
 }
 
 void MainWindow::on_loginButton_clicked()
@@ -441,36 +507,48 @@ void MainWindow::on_loginButton_clicked()
     QString username = usernameLineEdit->text();
     QString password = passwordLineEdit->text();
 
-    if (validateLogin(username, password)) {
+    QString userType;
+    if (validateLogin(username, password, userType)) {
         loginStatusLabel->setText("Вход успешен!");
-        setElementsEnabled(true); // Все элементы активны
+        setElementsEnabled(true);
+        onLoginSuccess(username, userType);
     } else {
         loginStatusLabel->setText("Неверные данные. Попробуйте еще раз.");
     }
 }
 
-bool MainWindow::validateLogin(const QString& username, const QString& password)
+bool MainWindow::validateLogin(const QString& username, const QString& password, QString& userType)
 {
-    QFile file("users.json"); // Открываем файл users.json
-    if (file.open(QIODevice::ReadOnly)) {
-        QByteArray data = file.readAll();
-        QJsonDocument jsonDoc = QJsonDocument::fromJson(data);
-        if (jsonDoc.isArray()) {
-            QJsonArray jsonArray = jsonDoc.array();
-            for (int i = 0; i < jsonArray.size(); i++) {
-                QJsonObject userObject = jsonArray.at(i).toObject();
-                QString storedUsername = userObject.value("username").toString();
-                QString storedPassword = userObject.value("password").toString();
-
-                if (storedUsername == username && storedPassword == password) {
-                    file.close();
-                    return true; // Пользователь найден, пароль верный
-                }
-            }
-        }
-        file.close();
+    QFile file("users.json");
+    if (!file.open(QIODevice::ReadOnly)) {
+        qWarning("Could not open users.json for reading.");
+        return false;
     }
-    return false; // Пользователь не найден или пароль неверный
+
+    QByteArray data = file.readAll();
+    QJsonDocument jsonDoc = QJsonDocument::fromJson(data);
+    if (!jsonDoc.isArray()) {
+        qWarning("Invalid JSON format in users.json.");
+        file.close();
+        return false;
+    }
+
+    QJsonArray jsonArray = jsonDoc.array();
+    for (int i = 0; i < jsonArray.size(); i++) {
+        QJsonObject userObject = jsonArray.at(i).toObject();
+        QString storedUsername = userObject.value("username").toString();
+        QString storedPassword = userObject.value("password").toString();
+        QString storedUserType = userObject.value("userType").toString();
+
+        if (storedUsername == username && storedPassword == password) {
+            userType = storedUserType;
+            file.close();
+            return true;
+        }
+    }
+
+    file.close();
+    return false;
 }
 
 void MainWindow::setElementsEnabled(bool enabled)

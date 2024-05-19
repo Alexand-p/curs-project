@@ -8,5 +8,35 @@
         "password": "фывфывфв",
         "userType": "Администратор",
         "username": "фывфыв"
+    },
+    {
+        "password": "1234",
+        "userType": "Пользователь",
+        "username": "Максим"
+    },
+    {
+        "password": "1",
+        "userType": "Администратор",
+        "username": "1"
+    },
+    {
+        "password": "1111",
+        "userType": "Пользователь",
+        "username": "хуй"
+    },
+    {
+        "password": "1",
+        "userType": "Администратор",
+        "username": "1"
+    },
+    {
+        "password": "1",
+        "userType": "Администратор",
+        "username": "1"
+    },
+    {
+        "password": "2",
+        "userType": "Пользователь",
+        "username": "2"
     }
 ]
