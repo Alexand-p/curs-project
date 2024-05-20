@@ -14,7 +14,6 @@
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLabel>
-#include <QtWidgets/QLineEdit>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QPushButton>
@@ -28,14 +27,9 @@ QT_BEGIN_NAMESPACE
 class Ui_MainWindow
 {
 public:
-    QWidget *centralwidget;
+    QWidget *loginWidget;
     QVBoxLayout *verticalLayout;
     QGridLayout *loginLayout;
-    QLabel *usernameLabel;
-    QLineEdit *usernameLineEdit;
-    QLabel *passwordLabel;
-    QLineEdit *passwordLineEdit;
-    QPushButton *loginButton;
     QLabel *loginStatusLabel;
     QPushButton *addBookButton;
     QPushButton *editBookButton;
@@ -56,39 +50,13 @@ public:
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName("MainWindow");
         MainWindow->resize(1056, 765);
-        centralwidget = new QWidget(MainWindow);
-        centralwidget->setObjectName("centralwidget");
-        verticalLayout = new QVBoxLayout(centralwidget);
+        loginWidget = new QWidget(MainWindow);
+        loginWidget->setObjectName("loginWidget");
+        verticalLayout = new QVBoxLayout(loginWidget);
         verticalLayout->setObjectName("verticalLayout");
         loginLayout = new QGridLayout();
         loginLayout->setObjectName("loginLayout");
-        usernameLabel = new QLabel(centralwidget);
-        usernameLabel->setObjectName("usernameLabel");
-
-        loginLayout->addWidget(usernameLabel, 0, 0, 1, 1);
-
-        usernameLineEdit = new QLineEdit(centralwidget);
-        usernameLineEdit->setObjectName("usernameLineEdit");
-
-        loginLayout->addWidget(usernameLineEdit, 0, 1, 1, 1);
-
-        passwordLabel = new QLabel(centralwidget);
-        passwordLabel->setObjectName("passwordLabel");
-
-        loginLayout->addWidget(passwordLabel, 1, 0, 1, 1);
-
-        passwordLineEdit = new QLineEdit(centralwidget);
-        passwordLineEdit->setObjectName("passwordLineEdit");
-        passwordLineEdit->setEchoMode(QLineEdit::Password);
-
-        loginLayout->addWidget(passwordLineEdit, 1, 1, 1, 1);
-
-        loginButton = new QPushButton(centralwidget);
-        loginButton->setObjectName("loginButton");
-
-        loginLayout->addWidget(loginButton, 2, 1, 1, 1);
-
-        loginStatusLabel = new QLabel(centralwidget);
+        loginStatusLabel = new QLabel(loginWidget);
         loginStatusLabel->setObjectName("loginStatusLabel");
 
         loginLayout->addWidget(loginStatusLabel, 3, 1, 1, 1);
@@ -96,62 +64,62 @@ public:
 
         verticalLayout->addLayout(loginLayout);
 
-        addBookButton = new QPushButton(centralwidget);
+        addBookButton = new QPushButton(loginWidget);
         addBookButton->setObjectName("addBookButton");
 
         verticalLayout->addWidget(addBookButton);
 
-        editBookButton = new QPushButton(centralwidget);
+        editBookButton = new QPushButton(loginWidget);
         editBookButton->setObjectName("editBookButton");
 
         verticalLayout->addWidget(editBookButton);
 
-        deleteBookButton = new QPushButton(centralwidget);
+        deleteBookButton = new QPushButton(loginWidget);
         deleteBookButton->setObjectName("deleteBookButton");
 
         verticalLayout->addWidget(deleteBookButton);
 
-        addUserButton = new QPushButton(centralwidget);
+        addUserButton = new QPushButton(loginWidget);
         addUserButton->setObjectName("addUserButton");
 
         verticalLayout->addWidget(addUserButton);
 
-        editUserButton = new QPushButton(centralwidget);
+        editUserButton = new QPushButton(loginWidget);
         editUserButton->setObjectName("editUserButton");
 
         verticalLayout->addWidget(editUserButton);
 
-        deleteUserButton = new QPushButton(centralwidget);
+        deleteUserButton = new QPushButton(loginWidget);
         deleteUserButton->setObjectName("deleteUserButton");
 
         verticalLayout->addWidget(deleteUserButton);
 
-        issueBookButton = new QPushButton(centralwidget);
+        issueBookButton = new QPushButton(loginWidget);
         issueBookButton->setObjectName("issueBookButton");
 
         verticalLayout->addWidget(issueBookButton);
 
-        returnBookButton = new QPushButton(centralwidget);
+        returnBookButton = new QPushButton(loginWidget);
         returnBookButton->setObjectName("returnBookButton");
 
         verticalLayout->addWidget(returnBookButton);
 
-        generateReportButton = new QPushButton(centralwidget);
+        generateReportButton = new QPushButton(loginWidget);
         generateReportButton->setObjectName("generateReportButton");
 
         verticalLayout->addWidget(generateReportButton);
 
-        bookTableView = new QTableView(centralwidget);
+        bookTableView = new QTableView(loginWidget);
         bookTableView->setObjectName("bookTableView");
 
         verticalLayout->addWidget(bookTableView);
 
-        userTableView = new QTableView(centralwidget);
+        userTableView = new QTableView(loginWidget);
         userTableView->setObjectName("userTableView");
 
         verticalLayout->addWidget(userTableView);
 
-        MainWindow->setCentralWidget(centralwidget);
+        MainWindow->setCentralWidget(loginWidget);
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName("menubar");
         menubar->setGeometry(QRect(0, 0, 1056, 22));
@@ -168,9 +136,6 @@ public:
     void retranslateUi(QMainWindow *MainWindow)
     {
         MainWindow->setWindowTitle(QCoreApplication::translate("MainWindow", "BiblSearch", nullptr));
-        usernameLabel->setText(QCoreApplication::translate("MainWindow", "\320\230\320\274\321\217 \320\277\320\276\320\273\321\214\320\267\320\276\320\262\320\260\321\202\320\265\320\273\321\217:", nullptr));
-        passwordLabel->setText(QCoreApplication::translate("MainWindow", "\320\237\320\260\321\200\320\276\320\273\321\214:", nullptr));
-        loginButton->setText(QCoreApplication::translate("MainWindow", "\320\222\320\276\320\271\321\202\320\270", nullptr));
         addBookButton->setText(QCoreApplication::translate("MainWindow", "\320\224\320\276\320\261\320\260\320\262\320\270\321\202\321\214 \320\272\320\275\320\270\320\263\321\203", nullptr));
         editBookButton->setText(QCoreApplication::translate("MainWindow", "\320\240\320\265\320\264\320\260\320\272\321\202\320\270\321\200\320\276\320\262\320\260\321\202\321\214 \320\272\320\275\320\270\320\263\321\203", nullptr));
         deleteBookButton->setText(QCoreApplication::translate("MainWindow", "\320\243\320\264\320\260\320\273\320\270\321\202\321\214 \320\272\320\275\320\270\320\263\321\203", nullptr));
