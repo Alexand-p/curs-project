@@ -1,9 +1,9 @@
 [
     {
         "author": "Джордж Оруэлл",
-        "available": false,
+        "available": true,
         "genre": "Антиутопия",
-        "takenByUser": "2",
+        "takenByUser": "",
         "title": "1985",
         "yearPublished": 1949
     },
@@ -120,11 +120,11 @@
         "yearPublished": 2000
     },
     {
-        "author": "2",
-        "available": true,
-        "genre": "3",
-        "takenByUser": "",
-        "title": "1",
-        "yearPublished": 2000
+        "author": "Марк Аврелий",
+        "available": false,
+        "genre": "сборник афористических мыслей",
+        "takenByUser": "2",
+        "title": "Наедине с собой",
+        "yearPublished": 2020
     }
 ]

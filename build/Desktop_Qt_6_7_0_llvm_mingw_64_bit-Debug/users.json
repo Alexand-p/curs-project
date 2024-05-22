@@ -15,11 +15,6 @@
         "username": "Максим"
     },
     {
-        "password": "1",
-        "userType": "Администратор",
-        "username": "1"
-    },
-    {
         "password": "1111",
         "userType": "Пользователь",
         "username": "хуй"
@@ -30,9 +25,9 @@
         "username": "1"
     },
     {
-        "password": "1",
+        "password": "1111",
         "userType": "Администратор",
-        "username": "1"
+        "username": "Евгений "
     },
     {
         "password": "2",

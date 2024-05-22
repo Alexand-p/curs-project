@@ -13,7 +13,7 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
-    , loggedInUserIndex(-1) // Инициализация флага
+    , loggedInUserIndex(-1)
 {
     ui->setupUi(this);
     bookModel = new QStandardItemModel(this);
@@ -357,7 +357,6 @@ void MainWindow::saveBooks()
     file.write(jsonDoc.toJson());
     file.close();
 
-    // Отладочная информация
     qDebug() << "Saved books to books.json, total:" << bookModel->rowCount();
 }
 
@@ -408,10 +407,9 @@ void MainWindow::addBook(const QString &title, const QString &author, const QStr
     items.append(new QStandardItem(""));
     bookModel->appendRow(items);
 
-    // Отладочная информация
     qDebug() << "Added book: " << title << author << genre << yearPublished << available;
 
-    saveBooks();  // Сохранение данных сразу после добавления книги
+    saveBooks();
 }
 
 void MainWindow::editBook(int row, const QString &title, const QString &author, const QString &genre, int yearPublished, bool available)
@@ -426,7 +424,7 @@ void MainWindow::editBook(int row, const QString &title, const QString &author, 
 void MainWindow::deleteBook(int row)
 {
     bookModel->removeRow(row);
-    saveBooks();  // Сохранение данных сразу после удаления книги
+    saveBooks();
 }
 
 void MainWindow::addUser(const QString &username, const QString &password, const QString &userType)
@@ -455,14 +453,14 @@ void MainWindow::issueBook(int userRow, int bookRow)
     QString username = userModel->item(userRow, 0)->text();
     bookModel->setItem(bookRow, 4, new QStandardItem("Взята"));
     bookModel->setItem(bookRow, 5, new QStandardItem(username));
-    saveBooks();  // Сохранение данных после выдачи книги
+    saveBooks();
 }
 
 void MainWindow::returnBook(int userRow, int bookRow)
 {
     bookModel->setItem(bookRow, 4, new QStandardItem("Доступна"));
     bookModel->setItem(bookRow, 5, new QStandardItem(""));
-    saveBooks();  // Сохранение данных после возврата книги
+    saveBooks();
 }
 
 void MainWindow::generateReport()
